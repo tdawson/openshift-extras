@@ -213,6 +213,47 @@ Notes:
         return default_facts
     return validated_facts
 
+def get_deployment_type(deployment_type):
+    #TODO: Wording obvs needs some work.
+    if deployment_type == None:
+        deployment_types = {1: 'enterprise',
+                            2: 'openshift-enterprise',
+                            3: 'atomic-enterprise',
+                            }
+        message = """
+Which product to you want to install?
+
+(1) OpenShift Enterprise 3.0
+(2) OpenShift Enterprise 3.1
+(3) Atomic Enterprise 3.1
+"""
+        click.echo(message)
+        response = click.prompt("Choose a product from above: ", default=1)
+        deployment_type = deployment_types[response]
+
+    return deployment_type
+
+def confirm_continue(message):
+    click.echo(message)
+    click.confirm("Are you ready to continue?", default=False, abort=True)
+    return
+
+def error_if_missing_info(masters, nodes):
+    if not masters:
+        raise click.BadOptionUsage('masters',
+                'For unattended installs, masters must '
+                'be specified on the command line or '
+                'from the config file '
+                '{}'.format(oo_cfg.config_path))
+
+        if not nodes:
+            raise click.BadOptionUsage('nodes',
+                    'For unattended installs, nodes must '
+                    'be specified on the command line or '
+                    'from the config file '
+                    '{}'.format(oo_cfg.config_path))
+    return
+
 @click.command()
 @click.option('--configuration', '-c',
               type=click.Path(file_okay=True,
@@ -243,8 +284,8 @@ Notes:
               default="/tmp/ansible.log")
 @click.option('--deployment-type',
               '-t',
-              type=click.Choice(['enterprise', 'origin']),
-              default='enterprise')
+              type=click.Choice(['origin', 'online', 'enterprise','atomic-enterprise','openshift-enterprise']),
+              default=None)
 @click.option('--unattended', '-u', is_flag=True, default=False)
 # TODO: This probably needs to be updated now that hosts -> masters/nodes
 @click.option('--host', '-h', 'hosts', multiple=True, callback=validate_hostname)
@@ -257,11 +298,16 @@ def main(configuration, ansible_playbook_directory, ansible_config, ansible_log_
         oo_cfg.settings['ansible_playbook_directory'] = ansible_playbook_directory
     validate_ansible_dir(None, None, ansible_playbook_directory)
     oo_cfg.ansible_playbook_directory = ansible_playbook_directory
-    oo_cfg.deployment_type = deployment_type
     oo_cfg.settings['ansible_log_path'] = ansible_log_path
     install_transactions.set_config(oo_cfg)
 
+    masters = oo_cfg.settings.setdefault('masters', hosts)
+    nodes = oo_cfg.settings.setdefault('nodes', hosts)
+    if unattended:
+        error_if_missing_info(masters, nodes)
+
     click.clear()
+
     message = """
 Welcome to the OpenShift Enterprise 3 installation.
 
@@ -282,45 +328,21 @@ official Ansible playbooks be used.
 For more information on installation prerequisites please see:
 https://docs.openshift.com/enterprise/latest/admin_guide/install/prerequisites.html
 """
-    click.echo(message)
-    response = click.prompt("Are you ready to continue?  y/Y to confirm, or n/N to abort", default='n')
-    response = response.lower()
-    if not response == 'y':
-        sys.exit()
+    confirm_continue(message)
+    click.clear()
 
     oo_cfg.settings['ansible_ssh_user'] = get_ansible_ssh_user()
     click.clear()
 
-    # TODO: figure out what this does
-    masters = oo_cfg.settings.setdefault('masters', hosts)
-    nodes = oo_cfg.settings.setdefault('nodes', hosts)
-    # TODO: Remove duplicate logic here
-    if not masters:
-        if unattended:
-            raise click.BadOptionUsage('masters',
-                                       'For unattended installs, masters must '
-                                       'be specified on the command line or '
-                                       'from the config file '
-                                       '{}'.format(oo_cfg.config_path))
-        else:
-            masters = collect_masters()
+    oo_cfg.deployment_type = get_deployment_type(deployment_type)
+    click.clear()
 
-    if not nodes:
-        if unattended:
-            raise click.BadOptionUsage('nodes',
-                                       'For unattended installs, nodes must '
-                                       'be specified on the command line or '
-                                       'from the config file '
-                                       '{}'.format(oo_cfg.config_path))
-        else:
-            nodes = collect_nodes(masters)
-
-    # TODO: Technically if we're in interactive mode they could have not
-    # specified any masters or nodes.
-    oo_cfg.settings['masters'] = masters
     # TODO: Until the Master can run the SDN itself we have to configure the Masters
     # as Nodes too.
+    masters = collect_masters()
+    nodes = collect_nodes(masters)
     nodes = list(set(masters + nodes))
+    oo_cfg.settings['masters'] = masters
     oo_cfg.settings['nodes'] = nodes
 
     # TODO: Technically we should make sure all the hosts are listed in the
@@ -341,11 +363,7 @@ https://docs.openshift.com/enterprise/latest/admin_guide/install/prerequisites.h
     message = """
 If changes are needed to the values recorded by the installer please update {}.
 """.format(oo_cfg.config_path)
-    click.echo(message)
-    response = click.prompt('Proceed? y/Y to confirm, or n/N to exit', default='y')
-    response = response.lower()
-    if not response == 'y':
-        sys.exit()
+    confirm_continue(message)
 
     error = install_transactions.run_main_playbook(masters, nodes)
     if error:
