@@ -8,7 +8,7 @@
 }
 
 Name:           oo-install
-Version:        3.0.2
+Version:        3.0.3
 Release:        1%{?dist}
 Summary:        Ansible wrapper for OpenShift Enterprise 3 installation
 License:        ASL 2.0
@@ -49,6 +49,10 @@ mv src/* .
 %{_bindir}/oo-install
 
 %changelog
+* Mon Oct 12 2015 Troy Dawson <tdawson@redhat.com> 3.0.3-1
+- fixup sources (tdawson@redhat.com)
+- fixup prep (tdawson@redhat.com)
+
 * Mon Oct 12 2015 Troy Dawson <tdawson@redhat.com> 3.0.2-1
 - update spec file to work with tito (tdawson@redhat.com)
 
