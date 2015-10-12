@@ -1,8 +1,12 @@
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
 %global srcname openshift-extras
-%global commit                  c64d09e528ca433832c6b6e6f5c7734a9cc8ee6f
-%global shortcommit             %(c=%{commit}; echo ${c:0:7})
+%global import_path github.com/openshift/openshift-extras
+# %commit is intended to be set by tito custom builders provided
+# in the .tito/lib directory. The values in this spec file will not be kept up to date.
+%{!?commit:
+%global commit c64d09e528ca433832c6b6e6f5c7734a9cc8ee6f
+}
 
 Name:           oo-install
 Version:        3.0.1
@@ -10,7 +14,7 @@ Release:        1%{?dist}
 Summary:        Ansible wrapper for OpenShift Enterprise 3 installation
 License:        ASL 2.0
 URL:            http://github.com/openshift/openshift-extras/tree/enterprise-3.0/oo-install
-Source0:        https://github.com/openshift/openshift-extras/archive/%{commit}/openshift-extras-%{commit}.tar.gz
+Source0:        https://%{import_path}/archive/%{commit}/%{name}-%{version}.tar.gz
 
 BuildArch:      noarch
 
@@ -29,10 +33,12 @@ Requires:      PyYAML
 Ansible wrapper for OpenShift Enterprise 3 installation.
 
 %prep
-%setup -q -n %{srcname}-%{commit}
-mv oo-install/src/* .
-mv ooinstall/{ansible.cfg,installer.cfg.template.yml} .
-rm -rf oo-install/
+%setup -q
+#%setup -q -n %{srcname}-%{commit}
+mkdir hold
+mv * hold
+mv hold/src/* .
+rm -rf hold/
 
 
 %build
@@ -46,13 +52,16 @@ rm -rf oo-install/
 #%{__python} ./tests/test_simple.py
 
 %files
-%doc ansible.cfg installer.cfg.template.yml LICENSE README.md
+%doc LICENSE README.md
 %{python_sitelib}/*
 %{_bindir}/oo-install
 
 %changelog
 * Mon Oct 12 2015 Troy Dawson <tdawson@redhat.com> 3.0.1-1
 - Inial import to tito
+
+* Tue Oct 06 2015 Troy Dawson <tdawson@redhat.com> - 3.0.0-0.4
+- Those weren't really example configs, put them back
 
 * Tue Oct 06 2015 Troy Dawson <tdawson@redhat.com> - 3.0.0-0.3
 - Put example configs in doc
