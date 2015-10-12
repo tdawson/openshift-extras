@@ -5,8 +5,8 @@
 %global shortcommit             %(c=%{commit}; echo ${c:0:7})
 
 Name:           oo-install
-Version:        3.0.0
-Release:        0.3%{?dist}
+Version:        3.0.1
+Release:        1%{?dist}
 Summary:        Ansible wrapper for OpenShift Enterprise 3 installation
 License:        ASL 2.0
 URL:            http://github.com/openshift/openshift-extras/tree/enterprise-3.0/oo-install
@@ -51,6 +51,9 @@ rm -rf oo-install/
 %{_bindir}/oo-install
 
 %changelog
+* Mon Oct 12 2015 Troy Dawson <tdawson@redhat.com> 3.0.1-1
+- Inial import to tito
+
 * Tue Oct 06 2015 Troy Dawson <tdawson@redhat.com> - 3.0.0-0.3
 - Put example configs in doc
 
