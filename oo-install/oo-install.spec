@@ -1,6 +1,5 @@
 %{!?python_sitelib: %global python_sitelib %(%{__python} -c "from distutils.sysconfig import get_python_lib; print get_python_lib()")}
 
-%global srcname openshift-extras
 %global import_path github.com/openshift/openshift-extras
 # %commit is intended to be set by tito custom builders provided
 # in the .tito/lib directory. The values in this spec file will not be kept up to date.
@@ -34,12 +33,7 @@ Ansible wrapper for OpenShift Enterprise 3 installation.
 
 %prep
 %setup -q
-#%setup -q -n %{srcname}-%{commit}
-mkdir hold
-mv * hold
-mv hold/src/* .
-rm -rf hold/
-
+mv src/* .
 
 %build
 %{__python} setup.py build
