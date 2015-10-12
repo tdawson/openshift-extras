@@ -14,7 +14,6 @@ Summary:        Ansible wrapper for OpenShift Enterprise 3 installation
 License:        ASL 2.0
 URL:            http://github.com/openshift/openshift-extras/tree/enterprise-3.0/oo-install
 Source0:        https://%{import_path}/archive/%{commit}/%{name}-%{version}.tar.gz
-
 BuildArch:      noarch
 
 BuildRequires: python-setuptools
@@ -46,7 +45,6 @@ mv src/* .
 #%{__python} ./tests/test_simple.py
 
 %files
-%doc LICENSE README.md
 %{python_sitelib}/*
 %{_bindir}/oo-install
 
