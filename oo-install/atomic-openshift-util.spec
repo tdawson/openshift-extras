@@ -53,3 +53,6 @@ mv -f %{buildroot}%{_bindir}/oo-install %{buildroot}%{_bindir}/atomic-openshift-
 %{_bindir}/atomic-openshift-installer
 
 %changelog
+* Tue Oct 13 2015 Troy Dawson <tdawson@redhat.com> 3.0.0-1
+- Initial Package
+
